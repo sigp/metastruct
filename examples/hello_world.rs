@@ -1,13 +1,16 @@
 use metastruct::metastruct;
+use std::marker::PhantomData;
 
 #[metastruct(mappings(
     map_numeric_fields_of_obj(exclude(y)),
-    map_mut_numeric_fields_of_obj(exclude(y), mutable)
+    map_mut_numeric_fields_of_obj(exclude(y), mutable),
 ))]
 pub struct Obj {
     pub x: u64,
     pub y: String,
     pub z: u8,
+    #[metastruct(exclude)]
+    pub _phantom: PhantomData<()>,
 }
 
 // FIXME(sproul): generate this
@@ -43,6 +46,7 @@ fn main() {
         x: 10,
         y: "Hello world".to_string(),
         z: 5,
+        _phantom: PhantomData,
     };
 
     println!("initial sum: {}", sum(&obj));

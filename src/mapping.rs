@@ -1,4 +1,4 @@
-use crate::MappingOpts;
+use crate::{FieldOpts, MappingOpts};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Ident, Type};
@@ -7,13 +7,24 @@ pub(crate) fn generate_mapping_macro(
     macro_name: &Ident,
     type_name: &Ident,
     fields: &[(Ident, Type)],
+    field_opts: &[FieldOpts],
     mapping_opts: &MappingOpts,
 ) -> TokenStream {
     let exclude_idents = mapping_opts
         .exclude
         .as_ref()
-        .map(|x| x.idents.as_slice())
-        .unwrap_or(&[]);
+        .into_iter()
+        .map(|exclude| &exclude.idents)
+        .flatten()
+        .chain(
+            fields
+                .iter()
+                .zip(field_opts)
+                .filter_map(|((field_name, _), field_opts)| {
+                    field_opts.exclude.then_some(field_name)
+                }),
+        )
+        .collect::<Vec<_>>();
     let (selected_fields, selected_field_types): (Vec<_>, Vec<_>) = fields
         .iter()
         .filter(|(field_name, _)| !exclude_idents.contains(&field_name))
