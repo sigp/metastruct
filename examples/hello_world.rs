@@ -1,4 +1,4 @@
-use metastruct::metastruct;
+use metastruct_macro::metastruct;
 use std::marker::PhantomData;
 
 #[metastruct(mappings(

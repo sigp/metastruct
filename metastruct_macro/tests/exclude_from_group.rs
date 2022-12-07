@@ -1,4 +1,4 @@
-use metastruct::metastruct;
+use metastruct_macro::metastruct;
 
 #[metastruct(mappings(
     neither_group(),
