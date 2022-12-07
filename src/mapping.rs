@@ -62,6 +62,17 @@ pub(crate) fn generate_mapping_macro(
         })
         .collect::<Vec<_>>();
 
+    let function_call_exprs = selected_fields
+        .iter()
+        .map(|field| {
+            if mapping_opts.fallible {
+                quote! { __metastruct_f(__metastruct_i, #field)? }
+            } else {
+                quote! { __metastruct_f(__metastruct_i, #field) }
+            }
+        })
+        .collect::<Vec<_>>();
+
     quote! {
         #[macro_export]
         macro_rules! #macro_name {
@@ -76,7 +87,7 @@ pub(crate) fn generate_mapping_macro(
                         let mut __metastruct_i: usize = 0;
                         #(
                             let __metastruct_f: #mapping_function_types = &mut $f;
-                            __metastruct_f(__metastruct_i, #selected_fields);
+                            #function_call_exprs;
                             __metastruct_i += 1;
                         )*
                     }

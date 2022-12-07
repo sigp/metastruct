@@ -16,6 +16,8 @@ struct MappingOpts {
     #[darling(default)]
     mutable: bool,
     #[darling(default)]
+    fallible: bool,
+    #[darling(default)]
     groups: Option<IdentList>,
 }
 
