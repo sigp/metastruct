@@ -21,7 +21,21 @@ pub(crate) fn generate_mapping_macro(
                 .iter()
                 .zip(field_opts)
                 .filter_map(|((field_name, _), field_opts)| {
-                    field_opts.exclude.then_some(field_name)
+                    let excluded_from_all = field_opts.exclude;
+                    let excluded_from_any_group = mapping_opts
+                        .groups
+                        .as_ref()
+                        .and_then(|groups| {
+                            let excluded_groups = field_opts.exclude_from.as_ref()?;
+                            Some(
+                                groups
+                                    .idents
+                                    .iter()
+                                    .any(|group| excluded_groups.idents.contains(group)),
+                            )
+                        })
+                        .unwrap_or(false);
+                    (excluded_from_all || excluded_from_any_group).then_some(field_name)
                 }),
         )
         .collect::<Vec<_>>();
@@ -72,39 +86,3 @@ pub(crate) fn generate_mapping_macro(
     }
     .into()
 }
-
-/*
-// FIXME(sproul): mutability
-fn generate_mapping_macro(
-    macro_name: &Ident,
-    type_name: &Ident,
-    fields: &[(Ident, Type)],
-    mapping_opts: &MappingOpts,
-) -> TokenStream {
-    let exclude_idents = &mapping_opts.exclude.idents;
-    let (selected_fields, selected_field_types): (Vec<_>, Vec<_>) = fields
-        .iter()
-        .filter(|(field_name, _)| !exclude_idents.contains(&field_name))
-        .cloned()
-        .unzip();
-
-    quote! {
-        macro_rules! #name {
-            ($v:expr, $f:expr) => {
-                match $v {
-                    #type_name {
-                        #(
-                            ref #selected_fields
-                        ),*
-                    } => {
-                        #(
-                            let __metastruct_f: &mut dyn FnMut(&'_ #selected_field_types) -> _ = &mut $f;
-                            __metastruct_f(#selected_fields);
-                        )*
-                    }
-                }
-            }
-        }
-    }
-}
-*/

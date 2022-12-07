@@ -15,12 +15,21 @@ struct MappingOpts {
     exclude: Option<IdentList>,
     #[darling(default)]
     mutable: bool,
+    #[darling(default)]
+    groups: Option<IdentList>,
 }
 
 #[derive(Debug, Default, FromMeta)]
 struct FieldOpts {
+    /// Exclude this field from *all* mapping macros.
     #[darling(default)]
     exclude: bool,
+    /// Exclude this field from the named groups.
+    ///
+    /// The group names should match groups defined on the `MappingOpts` for one or more mappings.
+    // FIXME(sproul): we currently don't verify this
+    #[darling(default)]
+    exclude_from: Option<IdentList>,
 }
 
 /// Top-level configuration via the `metastruct` attribute.
