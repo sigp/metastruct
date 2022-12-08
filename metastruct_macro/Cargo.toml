@@ -5,6 +5,8 @@ edition = "2021"
 description = "Abstractions for iterating and mapping over struct fields (proc macro crate)"
 keywords = ["field", "iterator", "macro"]
 categories = ["rust-patterns"]
+license-file = "LICENSE"
+repository = "https://github.com/sigp/metastruct"
 
 [lib]
 name = "metastruct_macro"
