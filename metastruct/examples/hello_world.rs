@@ -1,32 +1,19 @@
-use metastruct_macro::metastruct;
+use metastruct::{metastruct, selectors::AllFields, NumFields};
 use std::marker::PhantomData;
 
-#[metastruct(mappings(
-    map_numeric_fields_of_obj(exclude(y)),
-    map_mut_numeric_fields_of_obj(exclude(y), mutable),
-))]
+#[metastruct(
+    mappings(
+        map_numeric_fields_of_obj(exclude(y)),
+        map_mut_numeric_fields_of_obj(exclude(y), mutable),
+    ),
+    num_fields(all(), numeric(selector = "NumericFields", exclude(y)))
+)]
 pub struct Obj {
     pub x: u64,
     pub y: String,
     pub z: u8,
     #[metastruct(exclude)]
     pub _phantom: PhantomData<()>,
-}
-
-// FIXME(sproul): generate this
-pub trait NumFields<Selector> {
-    const NUM_FIELDS: usize;
-}
-
-pub struct AllFields;
-pub struct AllNumericFields;
-
-impl NumFields<AllFields> for Obj {
-    const NUM_FIELDS: usize = 3;
-}
-
-impl NumFields<AllNumericFields> for Obj {
-    const NUM_FIELDS: usize = 2;
 }
 
 fn sum(obj: &Obj) -> usize {
@@ -55,7 +42,7 @@ fn main() {
 
     println!(
         "num fields? {}/{} are numeric",
-        <Obj as NumFields<AllNumericFields>>::NUM_FIELDS,
+        <Obj as NumFields<NumericFields>>::NUM_FIELDS,
         <Obj as NumFields<AllFields>>::NUM_FIELDS
     );
 }

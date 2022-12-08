@@ -1,18 +1,5 @@
-[package]
-name = "metastruct"
-version = "0.1.0"
-edition = "2021"
-description = "Abstractions for iterating and mapping over struct fields"
-keywords = ["field", "iterator", "macro"]
-categories = ["rust-patterns"]
-
-[dependencies]
-darling = "0.13.0"
-itertools = "0.10.1"
-proc-macro2 = "1.0.32"
-quote = "1.0.10"
-syn = "1.0.82"
-smallvec = "1.8.0"
-
-[dev-dependencies]
-metastruct_macro = { path = "./metastruct_macro" }
+[workspace]
+members = [
+    "metastruct",
+    "metastruct_macro",
+]

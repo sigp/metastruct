@@ -7,7 +7,9 @@ use std::iter::FromIterator;
 use syn::{parse_macro_input, Attribute, AttributeArgs, Ident, ItemStruct};
 
 mod attributes;
+mod exclude;
 mod mapping;
+mod num_fields;
 
 #[derive(Debug, FromMeta)]
 struct MappingOpts {
@@ -17,6 +19,16 @@ struct MappingOpts {
     mutable: bool,
     #[darling(default)]
     fallible: bool,
+    #[darling(default)]
+    groups: Option<IdentList>,
+}
+
+#[derive(Debug, FromMeta)]
+struct NumFieldsOpts {
+    #[darling(default)]
+    exclude: Option<IdentList>,
+    #[darling(default)]
+    selector: Option<Ident>,
     #[darling(default)]
     groups: Option<IdentList>,
 }
@@ -37,7 +49,11 @@ struct FieldOpts {
 /// Top-level configuration via the `metastruct` attribute.
 #[derive(Debug, FromMeta)]
 struct StructOpts {
+    #[darling(default)]
     mappings: HashMap<Ident, MappingOpts>,
+    // FIXME(sproul): the `Ident` is kind of useless here, consider writing a custom FromMeta
+    #[darling(default)]
+    num_fields: HashMap<Ident, NumFieldsOpts>,
 }
 
 #[proc_macro_attribute]
@@ -46,6 +62,9 @@ pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as ItemStruct);
 
     let type_name = &item.ident;
+
+    // Generics used for impl blocks.
+    let generics = &item.generics.split_for_impl();
 
     let opts = StructOpts::from_list(&attr_args).unwrap();
 
@@ -83,6 +102,17 @@ pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
             &fields,
             &field_opts,
             mapping_opts,
+        ));
+    }
+
+    // Generate `NumFields` implementations.
+    for (_, num_fields_opts) in &opts.num_fields {
+        output_items.push(num_fields::generate_num_fields_impl(
+            type_name,
+            generics,
+            &fields,
+            &field_opts,
+            num_fields_opts,
         ));
     }
 

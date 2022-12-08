@@ -1,4 +1,4 @@
-use crate::{FieldOpts, MappingOpts};
+use crate::{exclude::calculate_excluded_fields, FieldOpts, MappingOpts};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Ident, Type};
@@ -10,35 +10,12 @@ pub(crate) fn generate_mapping_macro(
     field_opts: &[FieldOpts],
     mapping_opts: &MappingOpts,
 ) -> TokenStream {
-    let exclude_idents = mapping_opts
-        .exclude
-        .as_ref()
-        .into_iter()
-        .map(|exclude| &exclude.idents)
-        .flatten()
-        .chain(
-            fields
-                .iter()
-                .zip(field_opts)
-                .filter_map(|((field_name, _), field_opts)| {
-                    let excluded_from_all = field_opts.exclude;
-                    let excluded_from_any_group = mapping_opts
-                        .groups
-                        .as_ref()
-                        .and_then(|groups| {
-                            let excluded_groups = field_opts.exclude_from.as_ref()?;
-                            Some(
-                                groups
-                                    .idents
-                                    .iter()
-                                    .any(|group| excluded_groups.idents.contains(group)),
-                            )
-                        })
-                        .unwrap_or(false);
-                    (excluded_from_all || excluded_from_any_group).then_some(field_name)
-                }),
-        )
-        .collect::<Vec<_>>();
+    let exclude_idents = calculate_excluded_fields(
+        &mapping_opts.exclude,
+        &mapping_opts.groups,
+        fields,
+        field_opts,
+    );
     let (selected_fields, selected_field_types): (Vec<_>, Vec<_>) = fields
         .iter()
         .filter(|(field_name, _)| !exclude_idents.contains(&field_name))
