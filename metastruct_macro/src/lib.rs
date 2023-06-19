@@ -24,6 +24,25 @@ struct MappingOpts {
 }
 
 #[derive(Debug, FromMeta)]
+struct BiMappingOpts {
+    other_type: Ident,
+    #[darling(default)]
+    self_by_value: bool,
+    #[darling(default)]
+    self_mutable: bool,
+    #[darling(default)]
+    other_by_value: bool,
+    #[darling(default)]
+    other_mutable: bool,
+    #[darling(default)]
+    exclude: Option<IdentList>,
+    #[darling(default)]
+    fallible: bool,
+    #[darling(default)]
+    groups: Option<IdentList>,
+}
+
+#[derive(Debug, FromMeta)]
 struct NumFieldsOpts {
     #[darling(default)]
     exclude: Option<IdentList>,
@@ -51,6 +70,8 @@ struct FieldOpts {
 struct StructOpts {
     #[darling(default)]
     mappings: HashMap<Ident, MappingOpts>,
+    #[darling(default)]
+    bimappings: HashMap<Ident, BiMappingOpts>,
     // FIXME(sproul): the `Ident` is kind of useless here, consider writing a custom FromMeta
     #[darling(default)]
     num_fields: HashMap<Ident, NumFieldsOpts>,
@@ -97,6 +118,17 @@ pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
     // Generate mapping macros.
     for (mapping_macro_name, mapping_opts) in &opts.mappings {
         output_items.push(mapping::generate_mapping_macro(
+            mapping_macro_name,
+            type_name,
+            &fields,
+            &field_opts,
+            mapping_opts,
+        ));
+    }
+
+    // Generate bi-mapping macros.
+    for (mapping_macro_name, mapping_opts) in &opts.bimappings {
+        output_items.push(mapping::generate_bimapping_macro(
             mapping_macro_name,
             type_name,
             &fields,
