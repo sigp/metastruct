@@ -1,6 +1,6 @@
 [package]
 name = "metastruct_macro"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Abstractions for iterating and mapping over struct fields (proc macro crate)"
 keywords = ["field", "iterator", "macro"]
