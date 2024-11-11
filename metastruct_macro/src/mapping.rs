@@ -29,7 +29,7 @@ pub(crate) fn generate_mapping_macro(
         quote! { ref }
     };
 
-    let mapping_function_types = selected_field_types
+    let mapping_function_input_types = selected_field_types
         .iter()
         .map(|field_type| {
             if mapping_opts.mutable {
@@ -64,7 +64,7 @@ pub(crate) fn generate_mapping_macro(
                     } => {
                         let mut __metastruct_i: usize = 0;
                         #(
-                            let __metastruct_f: &mut dyn FnMut(usize, &$lifetime #mapping_function_types) -> _ = &mut $f;
+                            let __metastruct_f: &mut dyn FnMut(usize, &$lifetime #mapping_function_input_types) -> _ = &mut $f;
                             #function_call_exprs;
                             __metastruct_i += 1;
                         )*
