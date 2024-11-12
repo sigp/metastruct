@@ -29,13 +29,13 @@ pub(crate) fn generate_mapping_macro(
         quote! { ref }
     };
 
-    let mapping_function_types = selected_field_types
+    let mapping_function_input_types = selected_field_types
         .iter()
         .map(|field_type| {
             if mapping_opts.mutable {
-                quote! { &mut dyn FnMut(usize, &'_ mut #field_type) -> _ }
+                quote! { mut #field_type }
             } else {
-                quote! { &mut dyn FnMut(usize, &'_ #field_type) -> _ }
+                quote! { #field_type }
             }
         })
         .collect::<Vec<_>>();
@@ -54,7 +54,7 @@ pub(crate) fn generate_mapping_macro(
     quote! {
         #[macro_export]
         macro_rules! #macro_name {
-            ($v:expr, $f:expr) => {
+            (&$lifetime:tt _, $v:expr, $f:expr) => {
                 match $v {
                     #type_name {
                         #(
@@ -64,13 +64,16 @@ pub(crate) fn generate_mapping_macro(
                     } => {
                         let mut __metastruct_i: usize = 0;
                         #(
-                            let __metastruct_f: #mapping_function_types = &mut $f;
+                            let __metastruct_f: &mut dyn FnMut(usize, &$lifetime #mapping_function_input_types) -> _ = &mut $f;
                             #function_call_exprs;
                             __metastruct_i += 1;
                         )*
                     }
                 }
-            }
+            };
+            ($v:expr, $f:expr) => {
+                #macro_name!(&'_ _, $v, $f)
+            };
         }
     }
     .into()

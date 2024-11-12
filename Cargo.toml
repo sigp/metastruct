@@ -3,3 +3,4 @@ members = [
     "metastruct",
     "metastruct_macro",
 ]
+resolver = "2"
