@@ -54,7 +54,7 @@ pub(crate) fn generate_mapping_macro(
     quote! {
         #[macro_export]
         macro_rules! #macro_name {
-            (&$lifetime:tt _, $v:expr, $f:expr) => {
+            ($lifetime:lifetime, $v:expr, $f:expr) => {
                 match $v {
                     #type_name {
                         #(
@@ -72,7 +72,7 @@ pub(crate) fn generate_mapping_macro(
                 }
             };
             ($v:expr, $f:expr) => {
-                #macro_name!(&'_ _, $v, $f)
+                #macro_name!('_, $v, $f)
             };
         }
     }

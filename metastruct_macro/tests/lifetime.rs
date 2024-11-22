@@ -8,7 +8,7 @@ struct Foo {
 }
 
 fn sum<'a>(total: &'a mut u64, foo: &'a Foo) {
-    map_foo_fields!(&'a _, foo, |_, field| *total += *field as u64);
+    map_foo_fields!('a, foo, |_, field| { *total += *field as u64 });
 }
 
 #[test]
