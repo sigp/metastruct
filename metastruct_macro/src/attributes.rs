@@ -1,5 +1,5 @@
 //! Utilities to help with parsing configuration attributes.
-use darling::{ast::NestedMeta, Error, FromMeta};
+use darling::{export::NestedMeta, Error, FromMeta};
 use syn::Ident;
 
 /// List of identifiers implementing `FromMeta`.

@@ -1,13 +1,10 @@
 use attributes::IdentList;
-use darling::FromMeta;
+use darling::{export::NestedMeta, FromMeta};
 use proc_macro::TokenStream;
 use quote::quote;
 use std::collections::HashMap;
 use std::iter::FromIterator;
-use syn::{
-    parse::Parser, parse_macro_input, punctuated::Punctuated, token::Comma, Attribute, Ident,
-    ItemStruct, Meta,
-};
+use syn::{parse_macro_input, Attribute, Ident, ItemStruct};
 
 mod attributes;
 mod exclude;
@@ -82,12 +79,10 @@ struct StructOpts {
 
 #[proc_macro_attribute]
 pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
-    let parser = Punctuated::<Meta, Comma>::parse_terminated;
-    let attr_args = parser.parse(args).unwrap();
-    let nested_meta: Vec<darling::ast::NestedMeta> = attr_args
-        .into_iter()
-        .map(|meta| darling::ast::NestedMeta::Meta(meta))
-        .collect();
+    let attr_args = match NestedMeta::parse_meta_list(args.into()) {
+        Ok(args) => args,
+        Err(err) => return err.to_compile_error().into(),
+    };
     let mut item = parse_macro_input!(input as ItemStruct);
 
     let type_name = &item.ident;
@@ -95,7 +90,10 @@ pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
     // Generics used for impl blocks.
     let generics = &item.generics.split_for_impl();
 
-    let opts = StructOpts::from_list(&nested_meta).unwrap();
+    let opts = match StructOpts::from_list(&attr_args) {
+        Ok(opts) => opts,
+        Err(err) => return err.write_errors().into(),
+    };
 
     let mut output_items: Vec<TokenStream> = vec![];
 
