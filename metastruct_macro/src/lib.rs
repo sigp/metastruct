@@ -1,10 +1,10 @@
 use attributes::IdentList;
-use darling::FromMeta;
+use darling::{export::NestedMeta, FromMeta};
 use proc_macro::TokenStream;
 use quote::quote;
 use std::collections::HashMap;
 use std::iter::FromIterator;
-use syn::{parse_macro_input, Attribute, AttributeArgs, Ident, ItemStruct};
+use syn::{parse_macro_input, Attribute, Ident, ItemStruct};
 
 mod attributes;
 mod exclude;
@@ -79,7 +79,10 @@ struct StructOpts {
 
 #[proc_macro_attribute]
 pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
-    let attr_args = parse_macro_input!(args as AttributeArgs);
+    let attr_args = match NestedMeta::parse_meta_list(args.into()) {
+        Ok(args) => args,
+        Err(err) => return err.to_compile_error().into(),
+    };
     let mut item = parse_macro_input!(input as ItemStruct);
 
     let type_name = &item.ident;
@@ -87,7 +90,10 @@ pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
     // Generics used for impl blocks.
     let generics = &item.generics.split_for_impl();
 
-    let opts = StructOpts::from_list(&attr_args).unwrap();
+    let opts = match StructOpts::from_list(&attr_args) {
+        Ok(opts) => opts,
+        Err(err) => return err.write_errors().into(),
+    };
 
     let mut output_items: Vec<TokenStream> = vec![];
 
@@ -108,7 +114,7 @@ pub fn metastruct(args: TokenStream, input: TokenStream) -> TokenStream {
                 .iter()
                 .filter(|attr| is_metastruct_attr(attr))
                 .find_map(|attr| {
-                    let meta = attr.parse_meta().unwrap();
+                    let meta = &attr.meta;
                     Some(FieldOpts::from_meta(&meta).unwrap())
                 })
                 .unwrap_or_default()
@@ -173,7 +179,7 @@ fn is_metastruct_attr(attr: &Attribute) -> bool {
 
 /// Predicate for determining whether an attribute has the given `ident` as its path.
 fn is_attr_with_ident(attr: &Attribute, ident: &str) -> bool {
-    attr.path
+    attr.path()
         .get_ident()
         .map_or(false, |attr_ident| attr_ident.to_string() == ident)
 }
