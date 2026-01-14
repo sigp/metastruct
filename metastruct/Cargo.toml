@@ -14,4 +14,4 @@ default = ["macro"]
 macro = ["metastruct_macro"]
 
 [dependencies]
-metastruct_macro = { version = "0.1.2", path = "../metastruct_macro", optional = true }
+metastruct_macro = { version = "0.1.3", path = "../metastruct_macro", optional = true }
